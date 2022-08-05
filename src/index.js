@@ -2,6 +2,7 @@
 
 import Phaser from "phaser";
 
+const shapeTypes = ["I", "J", "L", "O", "S", "T", "Z"];
 const shapes = new Map([
 	["I", {
 		coords: [
@@ -83,31 +84,33 @@ const rows = [
 ];
 
 class Tetris extends Phaser.Scene {
+	tetrominoPhysicsGroup;
+	lastPhysicsTick = Date.now();
+
 	preload() {
-		this.load.spritesheet("blocks", "src/assets/BlockSpriteSheet.png", { frameWidth: 40, frameHeight: 40 });
-	}
-	create() {
-		const camera = this.cameras.add(0, 0, 480, 880);
-		camera.setBackgroundColor(0x777777);
-
-		shapes.forEach((shape, key) => {
-			const colour = Math.floor(Math.random() * 7);
-			const xOffset = columns[Math.floor(Math.random() * columns.length)];
-			const yOffset = rows[Math.floor(Math.random() * rows.length)];
-
-			if (!this.checkMapBounds(shape, [xOffset, yOffset])) {
-				console.error("Piece is outside of map bounds");
-				console.debug(`Piece type: ${key}`);
-				return;
+		this.load.spritesheet(
+			"blocks",
+			"src/assets/BlockSpriteSheet.png",
+			{
+				frameWidth: 40,
+				frameHeight: 40,
 			}
-
-			shape.coords.forEach((coords) => {
-				const tetromino = this.add.image(coords[0] + xOffset, coords[1] + yOffset, "blocks", colour);
-				tetromino.setOrigin(0, 0);
-			});
-		});
+		);
 	}
-	update() { }
+
+	create() {
+		this.tetrominoPhysicsGroup = this.physics.add.group();
+		this.physics.collide(this.tetrominoPhysicsGroup);
+		this.spawnTetromino();
+	}
+
+	update() {
+		this.physics.pause();
+
+		this.tetrominoPhysicsGroup.getChildren().forEach((child) => child.setVelocity(0, 0));
+
+		this.physics.resume();
+	}
 
 	checkMapBounds(shape, offset) {
 		const [x, y] = offset;
@@ -122,6 +125,41 @@ class Tetris extends Phaser.Scene {
 
 		return true;
 	}
+
+	spawnTetromino() {
+		const wantedType = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
+
+		shapes.forEach((shape, key) => {
+			if (key !== wantedType) {
+				return;
+			}
+
+			const colour = Math.floor(Math.random() * 7);
+			let xOffset;
+
+			for (let i = 5; i >= 0; i--) {
+				const xOffsetTmp = columns[Math.floor(Math.random() * columns.length)];
+
+				if (!this.checkMapBounds(shape, [xOffsetTmp, 0])) {
+					console.error("Piece is outside of map bounds");
+					console.debug(`Piece type: ${key}`);
+					continue;
+				}
+
+				xOffset = xOffsetTmp;
+				break;
+			}
+
+			shape.coords.forEach((coords) => {
+				const tetromino = this.tetrominoPhysicsGroup.create(coords[0] + xOffset, coords[1] + 0, "blocks", colour);
+				tetromino.setOrigin(0, 0);
+				tetromino.setCollideWorldBounds(true);
+			});
+
+			this.canSpawn = false;
+		});
+	}
+
 }
 
 const config = {
@@ -129,6 +167,15 @@ const config = {
 	parent: "phaser-example",
 	width: 480,
 	height: 880,
+	physics: {
+        default: "arcade",
+        arcade: {
+			fps: 1,
+            gravity: { y: 40 },
+            debug: true,
+        }
+    },
+	
 	scene: Tetris,
 };
 

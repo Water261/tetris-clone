@@ -2,6 +2,8 @@
 // TODO: Implement piece dropping
 // TODO: Fix piece collision
 // TODO: Add scoring
+// TODO: Add end game
+// TODO: Implement piece checker for rotation
 //? Change rotation point for 'I' block?
 
 import Phaser from "phaser";
@@ -376,13 +378,43 @@ class Tetris extends Phaser.Scene {
 				break;
 
 			case keyCodes.SPACE:
-				let maxDropDistance
+				const dropDistances = [];
+				let maxHeight = 0;
+
+				this.currentPiece.forEach((piece) => piece.y > maxHeight ? maxHeight = piece.y : 0);
+
+				this.currentPiece.forEach((piece) => {
+					let highestDrop = 0;
+
+					this.pieceMatrix.forEach((row, rowPos) => {
+						if (rowPos > piece.y && rowPos < gameConfig.height - maxHeight) {
+							const isOccupied = row[piece.x];
+
+							if (!isOccupied && rowPos > highestDrop) {
+								highestDrop = rowPos;
+							}
+						}
+					});
+
+					dropDistances.push(highestDrop);
+				});
+
+				dropDistances.sort();
+
+				this.currentPiece.forEach((piece, index) => {
+					piece.y += dropDistances[0];
+
+					this.pieceMatrix[piece.y][piece.x] = true;
+					this.staticPieces[piece.y][piece.x] = piece;
+					delete this.currentPiece[index];
+				});
+				this.spawnTetromino();
+				break;
 		}
 	}
 
 	physicsTick() {
 		let stopPiece = false;
-		const coords = shapes[this.currentPieceType].coordinates[this.currentRotation];
 
 		this.currentPiece.forEach((piece) => {
 			if (stopPiece) {

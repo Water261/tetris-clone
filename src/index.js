@@ -221,6 +221,7 @@ const rows = [0, 40, 80, 120, 160, 200, 240, 280, 320, 360, 400, 440, 480, 520, 
 //* The game's tick speed in milliseconds
 const gameTickSpeed = 1000;
 
+const availableColours = 7;
 class Tetris extends Phaser.Scene {
 	/**
 	 * @type {Phaser.GameObjects.Image[]}
@@ -505,7 +506,7 @@ class Tetris extends Phaser.Scene {
 	spawnTetromino() {
 		const shapeKey = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
 		const shape = shapes[shapeKey];
-		const colour = Math.floor(Math.random() * 7); // 7 available colours
+		const colour = Math.floor(Math.random() * availableColours);
 		let xOffset;
 
 		for (let i = 5; i >= 0; i--) {

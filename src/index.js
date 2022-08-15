@@ -379,24 +379,36 @@ class Tetris extends Phaser.Scene {
 
 			case keyCodes.SPACE:
 				const dropDistances = [];
-				let maxHeight = 0;
-
-				this.currentPiece.forEach((piece) => piece.y > maxHeight ? maxHeight = piece.y : 0);
+				let maxPieceYPos = 0;
 
 				this.currentPiece.forEach((piece) => {
-					let highestDrop = 0;
+					if (piece.y > maxPieceYPos) {
+						maxPieceYPos = piece.y;
+					}
+				});
+
+				this.currentPiece.forEach((piece) => {
+					let highestDropDistance = 0;
+					let maxDropDistanceReached = false;
 
 					this.pieceMatrix.forEach((row, rowPos) => {
-						if (rowPos > piece.y && rowPos < gameConfig.height - maxHeight) {
-							const isOccupied = row[piece.x];
+						if (rowPos > piece.y && rowPos < gameConfig.height) {
+							if (maxDropDistanceReached) {
+								return;
+							}
 
-							if (!isOccupied && rowPos > highestDrop) {
-								highestDrop = rowPos;
+							if (row[piece.x] === true) {
+								maxDropDistanceReached = true;
+								return;
+							}
+
+							if (row[piece.x] === false && rowPos > highestDropDistance) {
+								highestDropDistance = rowPos - maxPieceYPos;
 							}
 						}
 					});
 
-					dropDistances.push(highestDrop);
+					dropDistances.push(highestDropDistance);
 				});
 
 				dropDistances.sort();

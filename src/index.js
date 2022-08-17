@@ -176,7 +176,29 @@ class Tetris extends Phaser.Scene {
 
 			this._gridLines.push(gridLine);
 		});
+
+		this.updateTickSpeed(GameTickSpeed);
+
+		this._keydownEvent = this.input.keyboard.on("keydown", this.keyDown, this);
 	}
+
+	//* Lifecycle Events
+	physicsStep() {}
+	/**
+	 * @param {Phaser.Input.Keyboard.Key} key 
+	 */
+	keyDown(key) {}
+
+
+	/**
+	 * @param {number} speed
+	 */
+	updateTickSpeed(speed) {
+		clearInterval(this._physicsInterval);
+
+		this._physicsInterval = setInterval(this.physicsStep, speed);
+	}
+
 
 	//* Class Variables
 	_pieceMatrix = new PieceMatrix(BoardGrid.Columns, BoardGrid.Rows);
@@ -190,6 +212,16 @@ class Tetris extends Phaser.Scene {
 	 * @type {Phaser.GameObjects.Rectangle[]}
 	 */
 	_gridLines = [];
+
+	/**
+	 * @type {NodeJS.Timer}
+	 */
+	_physicsInterval;
+
+	/**
+	 * @type {Phaser.Input.Keyboard.KeyboardPlugin}
+	 */
+	_keydownEvent;
 }
 
 const GameConfig = {

@@ -475,6 +475,8 @@ class Tetris extends Phaser.Scene {
 				dropDistances.sort();
 
 				this.currentPiece.forEach((piece, index) => {
+					this.pieceMatrix[piece.y][piece.x] = false;
+
 					piece.y += dropDistances[0];
 
 					this.pieceMatrix[piece.y][piece.x] = true;

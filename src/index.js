@@ -353,6 +353,10 @@ class Tetris extends Phaser.Scene {
 			if (newYPos < 0 || newYPos > gameConfig.height - 40) {
 				canRotate = false;
 			}
+			
+			if (this.pieceMatrix[newYPos][newXPos] === true) {
+				canRotate = false;
+			}
 		});
 
 		if (canRotate) {

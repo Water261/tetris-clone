@@ -9,6 +9,7 @@
 import Phaser from "phaser";
 
 const shapeTypes = ["I", "J", "L", "O", "S", "T", "Z"];
+// const shapeTypes = ["I"];
 const shapes = {
 	I: {
 		coordinates: {
@@ -232,6 +233,10 @@ class Tetris extends Phaser.Scene {
 	 */
 	staticPieces = [];
 	/**
+	 * @type {Phaser.GameObjects.Image[]}
+	 */
+	allPieces = [];
+	/**
 	 * @type {boolean[][]}
 	 */
 	pieceMatrix = [];
@@ -243,6 +248,30 @@ class Tetris extends Phaser.Scene {
 	 * @type {number}
 	 */
 	currentRotation;
+	/**
+	 * @type {boolean}
+	 */
+	isPaused = false;
+	/**
+	 * @type {boolean}
+	 */
+	isGameOver = false;
+	/**
+	 * @type {Phaser.GameObjects.Text}
+	 */
+	pausedText;
+	/**
+	 * @type {NodeJS.Timer}
+	 */
+	physTick;
+	/**
+	 * @type {number}
+	 */
+	currentScore = 0;
+	/**
+	 * @type {Phaser.GameObjects.Text}
+	 */
+	scoreText;
 
 	preload() {
 		this.load.spritesheet(
@@ -257,20 +286,28 @@ class Tetris extends Phaser.Scene {
 
 	create() {
 		const cam = this.cameras.add(0, 0, 480, 880);
-		cam.setBackgroundColor(0x555555);
+		cam.setBackgroundColor(0x000000);
 
 		rows.forEach((row) => {
 			this.pieceMatrix[row] = [];
 			this.staticPieces[row] = [];
+
+			const rowLine = this.add.rectangle(0, row, 480, 1, 0x333333);
+			rowLine.setOrigin(0, 0);
+
 			columns.forEach((column) => {
 				this.pieceMatrix[row][column] = false;
 				this.staticPieces[row][column] = undefined;
+
+				const columnLine = this.add.rectangle(column, 0, 1, 880, 0x333333);
+				columnLine.setOrigin(0, 0);
 			});
 		});
 
 		this.spawnTetromino();
 
-		setInterval(() => this.physicsTick(), gameTickSpeed);
+		this.scoreText = this.add.text(10, 10, `Score: ${this.currentScore}`, { fontSize: "24px" });
+		this.physTick = setInterval(() => this.physicsTick(), gameTickSpeed);
 
 		this.input.keyboard.on("keydown", this.handleKeyDown, this);
 	}
@@ -336,6 +373,25 @@ class Tetris extends Phaser.Scene {
 	 */
 	handleKeyDown(event) {
 		const keyCodes = Phaser.Input.Keyboard.KeyCodes;
+
+		if (event.keyCode === keyCodes.ESC) {
+			this.isPaused = !this.isPaused;
+
+			if (this.isPaused) {
+				this.pausedText = this.add.text(gameConfig.width / 2, gameConfig.height / 2, "Paused", { fontSize: "64px" });
+				this.pausedText.setOrigin(0.5, 0.5);
+				clearInterval(this.physTick)
+			} else {
+				this.pausedText.destroy();
+
+				this.physTick = setInterval(() => this.physicsTick(), gameTickSpeed);
+			}
+		}
+
+		if (this.isPaused || this.isGameOver) {
+			return;
+		}
+
 		switch (event.keyCode) {
 			case keyCodes.UP:
 			case keyCodes.DOWN:
@@ -403,7 +459,7 @@ class Tetris extends Phaser.Scene {
 								return;
 							}
 
-							if (row[piece.x] === false && rowPos > highestDropDistance) {
+							if (rowPos > highestDropDistance) {
 								highestDropDistance = rowPos - maxPieceYPos;
 							}
 						}
@@ -427,6 +483,10 @@ class Tetris extends Phaser.Scene {
 	}
 
 	physicsTick() {
+		if (this.isPaused || this.isGameOver) {
+			return;
+		}
+
 		let stopPiece = false;
 
 		this.currentPiece.forEach((piece) => {
@@ -475,15 +535,59 @@ class Tetris extends Phaser.Scene {
 					this.pieceMatrix[rowPos][column] = false;
 				});
 
-				this.staticPieces[rowPos].forEach((piece) => piece.destroy());
+				this.staticPieces[rowPos].forEach((piece, columnPos) => {
+					delete this.allPieces[this.allPieces.indexOf(piece)];
+					piece.destroy();
+					this.staticPieces[rowPos][columnPos] = undefined;
+				});
 				this.staticPieces.forEach((row, rowPos) => {
 					row.forEach((piece, columnPos) => {
 						if (piece !== undefined) {
 							this.pieceMatrix[rowPos][columnPos] = false;
-							this.pieceMatrix[rowPos + 40][columnPos] = false;
+							this.pieceMatrix[rowPos + 40][columnPos] = true;
 							piece.y += 40;
 						}
 					});
+				});
+
+				this.currentScore += 100;
+				this.scoreText.setText(`Score: ${this.currentScore}`);
+				this.scoreText.updateText();
+			}
+		});
+
+		this.pieceMatrix[0].forEach((piece) => {
+			if (piece === true) {
+				this.isGameOver = true;
+
+				// Add game over text
+				const gameOverText = this.add.text(gameConfig.width / 2, gameConfig.height / 2, "Game Over", { fontSize: "64px" });
+				const finalScoreText = this.add.text(gameConfig.width / 2, gameConfig.height / 2 + 50, `Final Score: ${this.currentScore}`, { fontSize: "32px" });
+				gameOverText.setOrigin(0.5, 0.5);
+				finalScoreText.setOrigin(0.5, 0.5);
+
+				this.scoreText.destroy();
+
+				// Destroy the current piece
+				this.currentPiece.forEach((piece) => piece.destroy());
+
+				let timeToDestroy = 1000;
+				// let totalTimeToDestroy = timeToDestroy + 250 * this.staticPieces.length + 50;
+				// Cinematically destroy each row
+				this.staticPieces.slice().reverse().forEach((row, index) => {
+					setTimeout(() => {
+						row.forEach((piece) => {
+							if (piece !== undefined) {
+								piece.destroy();
+								delete this.allPieces[this.allPieces.indexOf(piece)];
+							}
+						});
+					}, timeToDestroy);
+					timeToDestroy += 250;
+
+					if (index === this.staticPieces.length - 1) {
+						setTimeout(() => this.allPieces.forEach((piece) => piece.destroy()), timeToDestroy);
+					}
 				});
 			}
 		});
@@ -503,6 +607,25 @@ class Tetris extends Phaser.Scene {
 		return true;
 	}
 
+	/**
+	 * @param {number[][]} newCoords
+	 * @param {number[]} offset
+	 */
+	checkPieceBounds(newCoords, offset) {
+		let isOkay = true;
+
+		newCoords.forEach((coordinate) => {
+			const xPos = offset[0] + coordinate[0];
+			const yPos = offset[1] + coordinate[1];
+
+			if (this.pieceMatrix[yPos][xPos] === true) {
+				isOkay = false;
+			}
+		});
+
+		return isOkay;
+	}
+
 	spawnTetromino() {
 		const shapeKey = shapeTypes[Math.floor(Math.random() * shapeTypes.length)];
 		const shape = shapes[shapeKey];
@@ -512,7 +635,7 @@ class Tetris extends Phaser.Scene {
 		for (let i = 5; i >= 0; i--) {
 			const xOffsetTmp = columns[Math.floor(Math.random() * columns.length)];
 
-			if (!this.checkMapBounds(shape, [xOffsetTmp, 0])) {
+			if (!this.checkMapBounds(shape, [xOffsetTmp, 0]) || !this.checkPieceBounds(shape.coordinates[0], [xOffsetTmp, 0])) {
 				continue;
 			}
 
@@ -520,12 +643,14 @@ class Tetris extends Phaser.Scene {
 			break;
 		}
 
-		this.currentPiece = shape.coordinates[0].map((/** @type {any[]} */ coords) => {
+		this.currentPiece = shape.coordinates[0].map((coords) => {
 			const xPos = coords[0] + xOffset;
 			const yPos = coords[1];
 
 			const tetromino = this.add.image(xPos, yPos, "blocks", colour);
 			tetromino.setOrigin(0, 0);
+
+			this.allPieces.push(tetromino);
 
 			return tetromino;
 		});

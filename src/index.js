@@ -277,6 +277,17 @@ class Cell extends Phaser.GameObjects.Image {
 	}
 }
 
+class StaticPieces extends Phaser.GameObjects.Group {
+	/**
+	 * @param {Phaser.Scene} scene
+	 */
+	constructor(scene) {
+		super(scene);
+
+		scene.add.existing(this);
+	}
+}
+
 class Piece extends Phaser.GameObjects.Group {
 	/**
 	 * @param {Phaser.Scene} scene
@@ -291,7 +302,6 @@ class Piece extends Phaser.GameObjects.Group {
 
 		this._currentRotation = 0;
 		this._shapeType = shapeType;
-
 		
 		const shapesToAdd = Shapes[shapeType].coordinates[this._currentRotation].map((coordinate) => {
 			const position = new Vector2(coordinate[0] + xOffset, coordinate[1]);
@@ -464,6 +474,7 @@ class Tetris extends Phaser.Scene {
 
 		this._keydownEvent = this.input.keyboard.on("keydown", this.keyDown, this);
 		this._scoreText = new ScoreText(this, new Vector2(10, 10), { fontSize: "24px" });
+		this._staticPieces = new StaticPieces(this);
 
 		this.spawnTetromino();
 
@@ -502,7 +513,9 @@ class Tetris extends Phaser.Scene {
 		});
 
 		if (stopPiece) {
-			
+			this._currentPiece.getChildren().forEach((piece, index) => {
+
+			});
 		} else {
 			this._currentPiece.incY(40);
 		}
@@ -631,6 +644,12 @@ class Tetris extends Phaser.Scene {
 	 * @type {Piece}
 	 */
 	_currentPiece;
+
+	/**
+	 * @private
+	 * @type {StaticPieces}
+	 */
+	_staticPieces;
 }
 
 const GameConfig = {

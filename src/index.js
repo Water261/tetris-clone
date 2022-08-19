@@ -292,12 +292,17 @@ class Piece extends Phaser.GameObjects.Group {
 		this._currentRotation = 0;
 		this._shapeType = shapeType;
 
-		Shapes[shapeType].coordinates[this._currentRotation].forEach((coordinate) => {
+		
+		const shapesToAdd = Shapes[shapeType].coordinates[this._currentRotation].map((coordinate) => {
 			const position = new Vector2(coordinate[0] + xOffset, coordinate[1]);
 
-			const tetromino = this.create(position.x, position.y, "tetrominos", colour);
+			const tetromino = new Cell(scene, position, "tetrominos", colour);
 			tetromino.setOrigin(0, 0);
+
+			return tetromino;
 		});
+
+		this.addMultiple(shapesToAdd);
 	}
 
 	get currentRotation() {
@@ -457,16 +462,51 @@ class Tetris extends Phaser.Scene {
 			this._gridLines.push(gridLine);
 		});
 
-		this.updateTickSpeed(GameTickSpeed);
-
 		this._keydownEvent = this.input.keyboard.on("keydown", this.keyDown, this);
 		this._scoreText = new ScoreText(this, new Vector2(10, 10), { fontSize: "24px" });
 
 		this.spawnTetromino();
+
+		this.updateTickSpeed(GameTickSpeed);
 	}
 
 	//* Lifecycle Events
-	physicsStep() { }
+	/**
+	 * @param {Tetris} game
+	 */
+	physicsStep(game) {
+		let stopPiece = false;
+
+		game._currentPiece.getChildren().forEach(
+			/**
+			 * @param {Cell} child
+			 */
+			// @ts-ignore
+			(child) => {
+			if (stopPiece) {
+				return;
+			}
+
+			const pos = new Vector2(child.x, child.y);
+			const nextPos = new Vector2(child.x, child.y + 40);
+
+			if (nextPos.y > GameConfig.height - 40) {
+				stopPiece = true;
+				return;
+			}
+
+			if (this._pieceMatrix.getCell(nextPos)) {
+				stopPiece = true;
+				return;
+			}
+		});
+
+		if (stopPiece) {
+			
+		} else {
+			this._currentPiece.incY(40);
+		}
+	}
 	/**
 	 * @param {Phaser.Input.Keyboard.Key} key 
 	 */
@@ -501,8 +541,6 @@ class Tetris extends Phaser.Scene {
 		}
 
 		this._currentPiece = new Piece(this, shapeType, xOffset, colour);
-
-		// shapeToSpawn.coordinates[0].map()
 	}
 
 	/**
@@ -551,7 +589,7 @@ class Tetris extends Phaser.Scene {
 	updateTickSpeed(speed) {
 		clearInterval(this._physicsInterval);
 
-		this._physicsInterval = setInterval(this.physicsStep, speed);
+		this._physicsInterval = setInterval(() => this.physicsStep(this), speed);
 	}
 
 

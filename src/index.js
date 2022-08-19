@@ -13,15 +13,230 @@ const ShapeType = {
 	T: "T",
 	Z: "Z",
 };
+const ShapeTypes = [
+	ShapeType.I,
+	ShapeType.J,
+	ShapeType.L,
+	ShapeType.O,
+	ShapeType.S,
+	ShapeType.T,
+	ShapeType.Z,
+];
 // The board dimensions
 const BoardGrid = {
 	Columns: [0, 40, 80, 120, 160, 200, 240, 280, 320, 360, 400, 440],
 	Rows: [0, 40, 80, 120, 160, 200, 240, 280, 320, 360, 400, 440, 480, 520, 560, 600, 640, 680, 720, 760, 800, 840],
 };
+const Shapes = {
+	I: {
+		coordinates: {
+			// Rotations
+			[0]: [
+				[0, 0],
+				[40, 0],
+				[80, 0],
+				[120, 0],
+			],
+			[90]: [
+				[0, 0],
+				[0, 40],
+				[0, 80],
+				[0, 120],
+			],
+			[180]: [
+				[0, 0],
+				[-40, 0],
+				[-80, 0],
+				[-120, 0],
+			],
+			[270]: [
+				[0, 0],
+				[0, -40],
+				[0, -80],
+				[0, -120],
+			],
+		},
+		gridSize: 4,
+	},
+	J: {
+		coordinates: {
+			[0]: [
+				[0, 0],
+				[0, 40],
+				[40, 40],
+				[80, 40],
+			],
+			[90]: [
+				[80, 0],
+				[40, 0],
+				[40, 40],
+				[40, 80],
+			],
+			[180]: [
+				[80, 80],
+				[80, 40],
+				[40, 40],
+				[0, 40],
+			],
+			[270]: [
+				[40, 0],
+				[40, 40],
+				[40, 80],
+				[0, 80],
+			]
+		},
+		gridSize: 3,
+	},
+	L: {
+		coordinates: {
+			[0]: [
+				[80, 0],
+				[80, 40],
+				[40, 40],
+				[0, 40],
+			],
+			[90]: [
+				[40, 0],
+				[40, 40],
+				[40, 80],
+				[80, 80],
+			],
+			[180]: [
+				[0, 80],
+				[0, 40],
+				[40, 40],
+				[80, 40],
+			],
+			[270]: [
+				[0, 0],
+				[40, 0],
+				[40, 40],
+				[40, 80],
+			]
+		},
+		gridSize: 3,
+	},
+	O: {
+		coordinates: {
+			[0]: [
+				[0, 0],
+				[0, 40],
+				[40, 40],
+				[40, 0],
+			],
+			[90]: [
+				[0, 0],
+				[0, 40],
+				[40, 40],
+				[40, 0],
+			],
+			[180]: [
+				[0, 0],
+				[0, 40],
+				[40, 40],
+				[40, 0],
+			],
+			[270]: [
+				[0, 0],
+				[0, 40],
+				[40, 40],
+				[40, 0],
+			],
+		},
+		gridSize: 3,
+	},
+	S: {
+		coordinates: {
+			[0]: [
+				[0, 40],
+				[40, 40],
+				[40, 0],
+				[80, 0],
+			],
+			[90]: [
+				[40, 0],
+				[40, 40],
+				[80, 40],
+				[80, 80],
+			],
+			[180]: [
+				[0, 80],
+				[40, 80],
+				[40, 40],
+				[80, 40],
+			],
+			[270]: [
+				[0, 0],
+				[0, 40],
+				[40, 40],
+				[40, 80],
+			]
+		},
+		gridSize: 3,
+	},
+	T: {
+		coordinates: {
+			[0]: [
+				[0, 40],
+				[40, 40],
+				[80, 40],
+				[40, 0],
+			],
+			[90]: [
+				[40, 0],
+				[40, 40],
+				[40, 80],
+				[80, 40],
+			],
+			[180]: [
+				[0, 40],
+				[40, 40],
+				[80, 40],
+				[40, 80],
+			],
+			[270]: [
+				[40, 0],
+				[40, 40],
+				[40, 80],
+				[0, 40],
+			]
+		},
+		gridSize: 3,
+	},
+	Z: {
+		coordinates: {
+			[0]: [
+				[0, 0],
+				[40, 0],
+				[40, 40],
+				[80, 40],
+			],
+			[90]: [
+				[80, 0],
+				[80, 40],
+				[40, 40],
+				[40, 80],
+			],
+			[180]: [
+				[0, 40],
+				[40, 40],
+				[40, 80],
+				[80, 80],
+			],
+			[270]: [
+				[40, 0],
+				[40, 40],
+				[0, 40],
+				[0, 80],
+			],
+		},
+		gridSize: 3,
+	}
+}
 
 //* Game Constants
 const GameTickSpeed = 1000; // In Milliseconds
-const SpritesheetColours = 7;
+const NumSpritesheetColours = 7;
 const GridSize = 40; // In Pixels
 
 //* Game Classes
@@ -34,41 +249,106 @@ class Vector2 {
 		this.x = x;
 		this.y = y;
 	}
+
+	/**
+	 * @readonly
+	 * @type {number}
+	 */
+	x;
+
+	/**
+	 * @readonly
+	 * @type {number}
+	 */
+	y;
 }
 
 class Cell extends Phaser.GameObjects.Image {
 	/**
-	 * @param {Phaser.Scene} scene
-	 * @param {Vector2} position
-	 * @param {string | Phaser.Textures.Texture} texture
-	 * @param {string | number | undefined} frame
+	 * @param {Phaser.Scene} scene The scene to display on
+	 * @param {Vector2} position The position of the cell
+	 * @param {string | Phaser.Textures.Texture} texture The texture id
+	 * @param {string | number | undefined} frame The frame of the texture
 	 */
 	constructor(scene, position, texture, frame) {
 		super(scene, position.x, position.y, texture, frame);
+
+		scene.add.existing(this);
 	}
 }
 
 class Piece extends Phaser.GameObjects.Group {
 	/**
 	 * @param {Phaser.Scene} scene
-	 * @param {Phaser.GameObjects.GameObject[] | undefined} children
-	 * @param {Phaser.Types.GameObjects.Group.GroupConfig | undefined} configuration
+	 * @param {string} shapeType
+	 * @param {number} xOffset
+	 * @param {number} colour
 	 */
-	constructor(scene, children, configuration) {
-		super(scene, children, configuration);
+	constructor(scene, shapeType, xOffset, colour) {
+		super(scene, undefined, { name: "CurrentPiece" });
+
+		scene.add.existing(this);
+
+		this._currentRotation = 0;
+		this._shapeType = shapeType;
+
+		Shapes[shapeType].coordinates[this._currentRotation].forEach((coordinate) => {
+			const position = new Vector2(coordinate[0] + xOffset, coordinate[1]);
+
+			const tetromino = this.create(position.x, position.y, "tetrominos", colour);
+			tetromino.setOrigin(0, 0);
+		});
 	}
+
+	get currentRotation() {
+		return this._currentRotation;
+	}
+
+	set currentRotation(newRot) {
+		this._currentRotation = newRot;
+	}
+
+	/**
+	 * @private
+	 * @type {number}
+	 */
+	_currentRotation;
+
+	/**
+	 * @private
+	 * @readonly
+	 * @type {string}
+	 */
+	_shapeType;
 }
 
 class ScoreText extends Phaser.GameObjects.Text {
 	/**
 	 * @param {Phaser.Scene} scene
 	 * @param {Vector2} position
-	 * @param {string | string[]} text
 	 * @param {Phaser.Types.GameObjects.Text.TextStyle} style
 	 */
-	constructor(scene, position, text, style) {
-		super(scene, position.x, position.y, text, style);
+	constructor(scene, position, style, initialScore = 0) {
+		super(scene, position.x, position.y, `Score: ${initialScore}`, style);
+
+		scene.add.existing(this);
+		this._currentscore = initialScore;
 	}
+
+	get currentScore() {
+		return this._currentscore;
+	}
+
+	set currentScore(newScore) {
+		this._currentscore = newScore;
+		this.setText(`Score: ${newScore}`);
+	}
+
+	/**
+	 * @private
+	 * @type {number}
+	 */
+	_currentscore;
 }
 
 class PieceMatrix {
@@ -89,14 +369,6 @@ class PieceMatrix {
 				this._pieceMatrix[x][y] = false;
 			});
 		});
-	}
-
-	/**
-	 * @param {Vector2} position
-	 * @param {boolean} newValue
-	 */
-	setCell(position, newValue) {
-		this._pieceMatrix[position.x][position.y] = newValue;
 	}
 
 	/**
@@ -121,6 +393,14 @@ class PieceMatrix {
 	 */
 	getCell(position) {
 		return this._pieceMatrix[position.x][position.y];
+	}
+
+	/**
+	 * @param {Vector2} position
+	 * @param {boolean} newValue
+	 */
+	setCell(position, newValue) {
+		this._pieceMatrix[position.x][position.y] = newValue;
 	}
 
 	//* Class Variables
@@ -180,14 +460,89 @@ class Tetris extends Phaser.Scene {
 		this.updateTickSpeed(GameTickSpeed);
 
 		this._keydownEvent = this.input.keyboard.on("keydown", this.keyDown, this);
+		this._scoreText = new ScoreText(this, new Vector2(10, 10), { fontSize: "24px" });
+
+		this.spawnTetromino();
 	}
 
 	//* Lifecycle Events
-	physicsStep() {}
+	physicsStep() { }
 	/**
 	 * @param {Phaser.Input.Keyboard.Key} key 
 	 */
-	keyDown(key) {}
+	keyDown(key) { }
+
+	spawnTetromino() {
+		const shapeType = ShapeTypes[Math.floor(Math.random() * ShapeTypes.length - 1)];
+		const shapeToSpawn = Shapes[shapeType];
+		const colour = Math.floor(Math.random() * NumSpritesheetColours);
+		let xOffset = 0;
+
+		for (let i = 5; i >= 0; i--) {
+			const xOffsetTmp = BoardGrid.Columns[Math.floor(Math.random() * BoardGrid.Columns.length)];
+			const coordinates = shapeToSpawn.coordinates[0].map((coordinates) => {
+				return new Vector2(coordinates[0], coordinates[1]);
+			});
+
+			if (!this.checkMapBounds(shapeToSpawn, new Vector2(xOffsetTmp, 0))) {
+				continue;
+			}
+
+			if (!this.checkPieceBounds(coordinates, new Vector2(xOffsetTmp, 0))) {
+				continue;
+			}
+
+			xOffset = xOffsetTmp;
+			break;
+		}
+
+		if (this._currentPiece) {
+			this._currentPiece.destroy();
+		}
+
+		this._currentPiece = new Piece(this, shapeType, xOffset, colour);
+
+		// shapeToSpawn.coordinates[0].map()
+	}
+
+	/**
+	 * @param {{ coordinates: { 0: number[][]; 90: number[][]; 180: number[][]; 270: number[][]; }; gridSize: number; }} piece
+	 * @param {number} rotation
+	 */
+	rotatePiece(piece, rotation) { }
+
+	/**
+	 * @param {{ coordinates: { 0: number[][]; 90: number[][]; 180: number[][]; 270: number[][]; }; gridSize: number; }} shape
+	 * @param {Vector2} offset
+	 * @returns {boolean}
+	 */
+	checkMapBounds(shape, offset) {
+		if (shape.gridSize * 40 + offset.x > 480 || shape.gridSize * 40 + offset.y > 880) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * @param {Vector2[]} positions
+	 * @param {Vector2} offset
+	 * @returns {boolean}
+	 */
+	checkPieceBounds(positions, offset) {
+		let isOkay = true;
+
+		positions.forEach((position) => {
+			const xPos = offset.x + position.x;
+			const yPos = offset.y + position.y;
+
+			if (this._pieceMatrix.getCell(new Vector2(xPos, yPos))) {
+				isOkay = false;
+			}
+		});
+
+		return isOkay;
+	}
 
 
 	/**
@@ -202,26 +557,42 @@ class Tetris extends Phaser.Scene {
 
 	//* Class Variables
 	_pieceMatrix = new PieceMatrix(BoardGrid.Columns, BoardGrid.Rows);
-	
+
 	/**
+	 * @private
 	 * @type {Phaser.Cameras.Scene2D.Camera}
 	 */
 	_camera;
 
 	/**
+	 * @private
 	 * @type {Phaser.GameObjects.Rectangle[]}
 	 */
 	_gridLines = [];
 
 	/**
+	 * @private
 	 * @type {NodeJS.Timer}
 	 */
 	_physicsInterval;
 
 	/**
+	 * @private
 	 * @type {Phaser.Input.Keyboard.KeyboardPlugin}
 	 */
 	_keydownEvent;
+
+	/**
+	 * @private
+	 * @type {ScoreText}
+	 */
+	_scoreText;
+
+	/**
+	 * @private
+	 * @type {Piece}
+	 */
+	_currentPiece;
 }
 
 const GameConfig = {

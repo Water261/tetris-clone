@@ -32,28 +32,28 @@ const Shapes = {
 		coordinates: {
 			// Rotations
 			[0]: [
+				[40, 0],
+				[80, 0],
+				[120, 0],
+				[160, 0],
+			],
+			[90]: [
+				[0, 40],
+				[0, 80],
+				[0, 120],
+				[0, 160],
+			],
+			[180]: [
 				[0, 0],
 				[40, 0],
 				[80, 0],
 				[120, 0],
 			],
-			[90]: [
+			[270]: [
 				[0, 0],
 				[0, 40],
 				[0, 80],
 				[0, 120],
-			],
-			[180]: [
-				[0, 0],
-				[-40, 0],
-				[-80, 0],
-				[-120, 0],
-			],
-			[270]: [
-				[0, 0],
-				[0, -40],
-				[0, -80],
-				[0, -120],
 			],
 		},
 		gridSize: 4,
@@ -501,9 +501,11 @@ class Tetris extends Phaser.Scene {
 	 * @param {Tetris} game
 	 */
 	physicsStep(game) {
+		// if ()
+
 		let stopPiece = false;
 
-		game._currentPiece.getChildren().forEach(
+		this._currentPiece.getChildren().forEach(
 			/**
 			 * @param {Cell} child
 			 */
@@ -527,12 +529,57 @@ class Tetris extends Phaser.Scene {
 		});
 
 		if (stopPiece) {
-			this._currentPiece.getChildren().forEach((piece, index) => {
+			this._currentPiece.getChildren().forEach(
+				/**
+				 * @param {Cell} piece
+				 */
+				// @ts-ignore
+				(piece) => {
+				const pos = new Vector2(piece.x, piece.y);
+				this._pieceMatrix.setCell(pos, true);
 
+				this._staticPieces.add(piece);
+				this._currentPiece.remove(piece);
 			});
+
+			this.spawnTetromino();
 		} else {
 			this._currentPiece.incY(40);
 		}
+
+		BoardGrid.Rows.forEach((row) => {
+			let destroyRow = true;
+
+			BoardGrid.Columns.forEach((column) => {
+				const pos = new Vector2(column, row);
+
+				if (!this._pieceMatrix.getCell(pos)) {
+					destroyRow = false;
+				}
+			});
+
+			if (destroyRow) {
+				BoardGrid.Columns.forEach((column) => {
+					const pos = new Vector2(column, row);
+					this._pieceMatrix.setCell(pos, false);
+				});
+
+				const piecesToDestroy = this._staticPieces.getChildren().filter(
+					/**
+					 * @param {Cell} p
+					 */
+					// @ts-ignore
+					(p) => p.y === row
+				);
+				piecesToDestroy.forEach((p) => p.destroy());
+
+				this._staticPieces.incY(40);
+
+				this._scoreText.currentScore += 100;
+			}
+		});
+
+
 	}
 	/**
 	 * @param {Phaser.Input.Keyboard.Key} key 
@@ -540,7 +587,7 @@ class Tetris extends Phaser.Scene {
 	keyDown(key) { }
 
 	spawnTetromino() {
-		const shapeType = ShapeTypes[Math.floor(Math.random() * ShapeTypes.length - 1)];
+		const shapeType = ShapeTypes[Math.floor(Math.random() * (ShapeTypes.length - 1))];
 		const shapeToSpawn = Shapes[shapeType];
 		const colour = Math.floor(Math.random() * NumSpritesheetColours);
 		let xOffset = 0;
@@ -664,6 +711,12 @@ class Tetris extends Phaser.Scene {
 	 * @type {StaticPieces}
 	 */
 	_staticPieces;
+
+	/**
+	 * @private
+	 * @type {boolean}
+	 */
+	_isGameOver = false;
 }
 
 const GameConfig = {

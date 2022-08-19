@@ -500,8 +500,10 @@ class Tetris extends Phaser.Scene {
 	/**
 	 * @param {Tetris} game
 	 */
-	physicsStep(game) {
-		// if ()
+	physicsStep(game) { //! Do not remove the game parameter, it breaks the entire thing and I have no clue why
+		if (this._isGameOver) {
+			return;
+		}
 
 		let stopPiece = false;
 
@@ -579,7 +581,30 @@ class Tetris extends Phaser.Scene {
 			}
 		});
 
+		BoardGrid.Columns.forEach((column) => {
+			const pos = new Vector2(column, 0);
 
+			if (this._pieceMatrix.getCell(pos)) {
+				this._isGameOver = true;
+
+				const gameOverText = this.add.text(GameConfig.width / 2, GameConfig.height / 2, "Game Over", { fontSize: "64px" });
+				const finalScoreText = this.add.text(GameConfig.width / 2, GameConfig.height / 2 + 50, `Final Score: ${this._scoreText.currentScore}`, { fontSize: "32px" });
+				gameOverText.setOrigin(0.5, 0.5);
+				finalScoreText.setOrigin(0.5, 0.5);
+
+				this._scoreText.destroy();
+				
+				this._currentPiece.destroy(true, true);
+
+				let timeToDestroy = 1000;
+				BoardGrid.Rows.slice().reverse().forEach((row) => {
+					setTimeout(() => {
+						this._staticPieces.clearRow(row);
+					}, timeToDestroy);
+					timeToDestroy += 250;
+				});
+			}
+		});
 	}
 	/**
 	 * @param {Phaser.Input.Keyboard.Key} key 

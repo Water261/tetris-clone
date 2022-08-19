@@ -513,7 +513,6 @@ class Tetris extends Phaser.Scene {
 				return;
 			}
 
-			const pos = new Vector2(child.x, child.y);
 			const nextPos = new Vector2(child.x, child.y + 40);
 
 			if (nextPos.y > GameConfig.height - 40) {

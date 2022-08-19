@@ -286,6 +286,21 @@ class StaticPieces extends Phaser.GameObjects.Group {
 
 		scene.add.existing(this);
 	}
+
+	/**
+	 * @param {number} row
+	 */
+	clearRow(row) {
+		const piecesToRemove = this.getChildren().filter(
+			/**
+			 * @param {Cell} p
+			 */
+			//@ts-ignore
+			(p) => p.y === row
+		);
+
+		piecesToRemove.forEach((p) => p.destroy());
+	}
 }
 
 class Piece extends Phaser.GameObjects.Group {

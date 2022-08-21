@@ -317,7 +317,7 @@ class Piece extends Phaser.GameObjects.Group {
 
 		this._currentRotation = 0;
 		this._shapeType = shapeType;
-		
+
 		const shapesToAdd = Shapes[shapeType].coordinates[this._currentRotation].map((coordinate) => {
 			const position = new Vector2(coordinate[0] + xOffset, coordinate[1]);
 
@@ -330,12 +330,71 @@ class Piece extends Phaser.GameObjects.Group {
 		this.addMultiple(shapesToAdd);
 	}
 
-	get currentRotation() {
-		return this._currentRotation;
+	/**
+	 * @param {number} newRot
+	 * @param {PieceMatrix} pieceMatrix
+	 */
+	rotatePiece(newRot, pieceMatrix) {
+		const shapeCoordinates = Shapes[this._shapeType].coordinates;
+		const currentCoords = shapeCoordinates[this._currentRotation];
+		const newCoords = shapeCoordinates[newRot];
+		const firstPieceCoords = new Vector2(
+			//@ts-ignore
+			this.getChildren()[0].x - currentCoords[0][0],
+			//@ts-ignore
+			this.getChildren()[0].y - currentCoords[0][1]
+		);
+		let canRotate = true;
+
+		this.getChildren().forEach(
+			/**
+			 * @param {Cell} piece
+			 * @param {number} index
+			 */
+			//@ts-ignore
+			(piece, index) => {
+				const newPos = new Vector2(
+					firstPieceCoords.x + newCoords[index][0],
+					firstPieceCoords.y + newCoords[index][1]
+				);
+
+				if (newPos.x < 0 || newPos.x > GameConfig.width - 40) {
+					canRotate = false;
+				}
+	
+				if (newPos.y < 0 || newPos.y > GameConfig.height - 40) {
+					canRotate = false;
+				}
+
+				if (pieceMatrix.getCell(newPos)) {
+					canRotate = false;
+				}
+			}
+		);
+
+		if (canRotate) {
+			this.getChildren().forEach(
+				/**
+				 * @param {Cell} piece
+				 * @param {number} index
+				 */
+				//@ts-ignore
+				(piece, index) => {
+					const newPos = new Vector2(
+						firstPieceCoords.x + newCoords[index][0],
+						firstPieceCoords.y + newCoords[index][1]
+					);
+	
+					piece.setPosition(newPos.x, newPos.y);
+				}
+			);
+	
+			this._currentRotation = newRot;
+		}
 	}
 
-	set currentRotation(newRot) {
-		this._currentRotation = newRot;
+	get currentRotation() {
+		return this._currentRotation;
 	}
 
 	/**
@@ -513,22 +572,22 @@ class Tetris extends Phaser.Scene {
 			 */
 			// @ts-ignore
 			(child) => {
-			if (stopPiece) {
-				return;
-			}
+				if (stopPiece) {
+					return;
+				}
 
-			const nextPos = new Vector2(child.x, child.y + 40);
+				const nextPos = new Vector2(child.x, child.y + 40);
 
-			if (nextPos.y > GameConfig.height - 40) {
-				stopPiece = true;
-				return;
-			}
+				if (nextPos.y > GameConfig.height - 40) {
+					stopPiece = true;
+					return;
+				}
 
-			if (this._pieceMatrix.getCell(nextPos)) {
-				stopPiece = true;
-				return;
-			}
-		});
+				if (this._pieceMatrix.getCell(nextPos)) {
+					stopPiece = true;
+					return;
+				}
+			});
 
 		if (stopPiece) {
 			this._currentPiece.getChildren().forEach(
@@ -537,12 +596,12 @@ class Tetris extends Phaser.Scene {
 				 */
 				// @ts-ignore
 				(piece) => {
-				const pos = new Vector2(piece.x, piece.y);
-				this._pieceMatrix.setCell(pos, true);
+					const pos = new Vector2(piece.x, piece.y);
+					this._pieceMatrix.setCell(pos, true);
 
-				this._staticPieces.add(piece);
-				this._currentPiece.remove(piece);
-			});
+					this._staticPieces.add(piece);
+					this._currentPiece.remove(piece);
+				});
 
 			this.spawnTetromino();
 		} else {
@@ -593,7 +652,7 @@ class Tetris extends Phaser.Scene {
 				finalScoreText.setOrigin(0.5, 0.5);
 
 				this._scoreText.destroy();
-				
+
 				this._currentPiece.destroy(true, true);
 
 				let timeToDestroy = 1000;
@@ -643,10 +702,29 @@ class Tetris extends Phaser.Scene {
 	}
 
 	/**
-	 * @param {{ coordinates: { 0: number[][]; 90: number[][]; 180: number[][]; 270: number[][]; }; gridSize: number; }} piece
-	 * @param {number} rotation
+	 * @param {Phaser.Input.Keyboard.Key} key
 	 */
-	rotatePiece(piece, rotation) { }
+	rotatePiece(key) {
+		const keyCodes = Phaser.Input.Keyboard.KeyCodes;
+		let canRotate = true;
+		let newRotation = this._currentPiece.currentRotation;
+
+		if (key.keyCode === keyCodes.UP) {
+			if (newRotation >= 270) {
+				newRotation = 0;
+			} else {
+				newRotation += 90;
+			}
+		} else if (key.keyCode === keyCodes.DOWN) {
+			if (newRotation <= 0) {
+				newRotation = 270;
+			} else {
+				newRotation -= 80;
+			}
+		}
+
+		this._currentPiece.rotatePiece(newRotation, this._pieceMatrix);
+	}
 
 	/**
 	 * @param {{ coordinates: { 0: number[][]; 90: number[][]; 180: number[][]; 270: number[][]; }; gridSize: number; }} shape

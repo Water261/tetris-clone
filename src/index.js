@@ -25,7 +25,10 @@ const ShapeTypes = [
 // The board dimensions
 const BoardGrid = {
 	Columns: [0, 40, 80, 120, 160, 200, 240, 280, 320, 360, 400, 440],
-	Rows: [0, 40, 80, 120, 160, 200, 240, 280, 320, 360, 400, 440, 480, 520, 560, 600, 640, 680, 720, 760, 800, 840],
+	Rows: [
+		0, 40, 80, 120, 160, 200, 240, 280, 320, 360, 400, 440, 480, 520, 560,
+		600, 640, 680, 720, 760, 800, 840,
+	],
 };
 const Shapes = {
 	I: {
@@ -83,7 +86,7 @@ const Shapes = {
 				[40, 40],
 				[40, 80],
 				[0, 80],
-			]
+			],
 		},
 		gridSize: 3,
 	},
@@ -112,7 +115,7 @@ const Shapes = {
 				[40, 0],
 				[40, 40],
 				[40, 80],
-			]
+			],
 		},
 		gridSize: 3,
 	},
@@ -170,7 +173,7 @@ const Shapes = {
 				[0, 40],
 				[40, 40],
 				[40, 80],
-			]
+			],
 		},
 		gridSize: 3,
 	},
@@ -199,7 +202,7 @@ const Shapes = {
 				[40, 40],
 				[40, 80],
 				[0, 40],
-			]
+			],
 		},
 		gridSize: 3,
 	},
@@ -231,8 +234,8 @@ const Shapes = {
 			],
 		},
 		gridSize: 3,
-	}
-}
+	},
+};
 
 //* Game Constants
 const GameTickSpeed = 1000; // In Milliseconds
@@ -296,7 +299,7 @@ class StaticPieces extends Phaser.GameObjects.Group {
 			 * @param {Cell} p
 			 */
 			//@ts-ignore
-			(p) => p.y === row
+			(p) => p.y === row,
 		);
 
 		piecesToRemove.forEach((p) => p.destroy());
@@ -318,8 +321,13 @@ class Piece extends Phaser.GameObjects.Group {
 		this._currentRotation = 0;
 		this._shapeType = shapeType;
 
-		const shapesToAdd = Shapes[shapeType].coordinates[this._currentRotation].map((coordinate) => {
-			const position = new Vector2(coordinate[0] + xOffset, coordinate[1]);
+		const shapesToAdd = Shapes[shapeType].coordinates[
+			this._currentRotation
+		].map((coordinate) => {
+			const position = new Vector2(
+				coordinate[0] + xOffset,
+				coordinate[1],
+			);
 
 			const tetromino = new Cell(scene, position, "tetrominos", colour);
 			tetromino.setOrigin(0, 0);
@@ -342,7 +350,7 @@ class Piece extends Phaser.GameObjects.Group {
 			//@ts-ignore
 			this.getChildren()[0].x - currentCoords[0][0],
 			//@ts-ignore
-			this.getChildren()[0].y - currentCoords[0][1]
+			this.getChildren()[0].y - currentCoords[0][1],
 		);
 		let canRotate = true;
 
@@ -355,13 +363,13 @@ class Piece extends Phaser.GameObjects.Group {
 			(piece, index) => {
 				const newPos = new Vector2(
 					firstPieceCoords.x + newCoords[index][0],
-					firstPieceCoords.y + newCoords[index][1]
+					firstPieceCoords.y + newCoords[index][1],
 				);
 
 				if (newPos.x < 0 || newPos.x > GameConfig.width - 40) {
 					canRotate = false;
 				}
-	
+
 				if (newPos.y < 0 || newPos.y > GameConfig.height - 40) {
 					canRotate = false;
 				}
@@ -369,7 +377,7 @@ class Piece extends Phaser.GameObjects.Group {
 				if (pieceMatrix.getCell(newPos)) {
 					canRotate = false;
 				}
-			}
+			},
 		);
 
 		if (canRotate) {
@@ -382,13 +390,13 @@ class Piece extends Phaser.GameObjects.Group {
 				(piece, index) => {
 					const newPos = new Vector2(
 						firstPieceCoords.x + newCoords[index][0],
-						firstPieceCoords.y + newCoords[index][1]
+						firstPieceCoords.y + newCoords[index][1],
 					);
-	
+
 					piece.setPosition(newPos.x, newPos.y);
-				}
+				},
 			);
-	
+
 			this._currentRotation = newRot;
 		}
 	}
@@ -512,24 +520,36 @@ class PieceMatrix {
 //* Main Scene
 class Tetris extends Phaser.Scene {
 	preload() {
-		this.load.spritesheet(
-			"tetrominos",
-			"src/assets/BlockSpriteSheet.png",
-			{ frameWidth: 40, frameHeight: 40 }
-		);
+		this.load.spritesheet("tetrominos", "src/assets/BlockSpriteSheet.png", {
+			frameWidth: 40,
+			frameHeight: 40,
+		});
 	}
 
 	create() {
 		// Set up the game's main camera
 		const cameraPosition = new Vector2(0, 0);
 		const cameraSize = new Vector2(GameConfig.width, GameConfig.height);
-		this._camera = this.cameras.add(cameraPosition.x, cameraPosition.y, cameraSize.x, cameraSize.y, true, "TetrisMain");
+		this._camera = this.cameras.add(
+			cameraPosition.x,
+			cameraPosition.y,
+			cameraSize.x,
+			cameraSize.y,
+			true,
+			"TetrisMain",
+		);
 		this._camera.setBackgroundColor(0x000000);
 
 		BoardGrid.Columns.forEach((x) => {
 			const rectPos = new Vector2(x, 0);
 			const rectSize = new Vector2(1, GameConfig.height);
-			const gridLine = this.add.rectangle(rectPos.x, rectPos.y, rectSize.x, rectSize.y, 0x333333);
+			const gridLine = this.add.rectangle(
+				rectPos.x,
+				rectPos.y,
+				rectSize.x,
+				rectSize.y,
+				0x333333,
+			);
 
 			gridLine.setOrigin(0, 0);
 
@@ -539,15 +559,27 @@ class Tetris extends Phaser.Scene {
 		BoardGrid.Rows.forEach((y) => {
 			const rectPos = new Vector2(0, y);
 			const rectSize = new Vector2(GameConfig.width, 1);
-			const gridLine = this.add.rectangle(rectPos.x, rectPos.y, rectSize.x, rectSize.y, 0x333333);
+			const gridLine = this.add.rectangle(
+				rectPos.x,
+				rectPos.y,
+				rectSize.x,
+				rectSize.y,
+				0x333333,
+			);
 
 			gridLine.setOrigin(0, 0);
 
 			this._gridLines.push(gridLine);
 		});
 
-		this._keydownEvent = this.input.keyboard.on("keydown", this.keyDown, this);
-		this._scoreText = new ScoreText(this, new Vector2(10, 10), { fontSize: "24px" });
+		this._keydownEvent = this.input.keyboard.on(
+			"keydown",
+			this.keyDown,
+			this,
+		);
+		this._scoreText = new ScoreText(this, new Vector2(10, 10), {
+			fontSize: "24px",
+		});
 		this._staticPieces = new StaticPieces(this);
 
 		this.spawnTetromino();
@@ -559,7 +591,8 @@ class Tetris extends Phaser.Scene {
 	/**
 	 * @param {Tetris} game
 	 */
-	physicsStep(game) { //! Do not remove the game parameter, it breaks the entire thing and I have no clue why
+	physicsStep(game) {
+		//! Do not remove the game parameter, it breaks the entire thing and I have no clue why
 		if (this._isGameOver) {
 			return;
 		}
@@ -587,7 +620,8 @@ class Tetris extends Phaser.Scene {
 					stopPiece = true;
 					return;
 				}
-			});
+			},
+		);
 
 		if (stopPiece) {
 			this._currentPiece.getChildren().forEach(
@@ -601,7 +635,8 @@ class Tetris extends Phaser.Scene {
 
 					this._staticPieces.add(piece);
 					this._currentPiece.remove(piece);
-				});
+				},
+			);
 
 			this.spawnTetromino();
 		} else {
@@ -630,7 +665,7 @@ class Tetris extends Phaser.Scene {
 					 * @param {Cell} p
 					 */
 					// @ts-ignore
-					(p) => p.y === row
+					(p) => p.y === row,
 				);
 				piecesToDestroy.forEach((p) => p.destroy());
 
@@ -646,8 +681,18 @@ class Tetris extends Phaser.Scene {
 			if (this._pieceMatrix.getCell(pos)) {
 				this._isGameOver = true;
 
-				const gameOverText = this.add.text(GameConfig.width / 2, GameConfig.height / 2, "Game Over", { fontSize: "64px" });
-				const finalScoreText = this.add.text(GameConfig.width / 2, GameConfig.height / 2 + 50, `Final Score: ${this._scoreText.currentScore}`, { fontSize: "32px" });
+				const gameOverText = this.add.text(
+					GameConfig.width / 2,
+					GameConfig.height / 2,
+					"Game Over",
+					{ fontSize: "64px" },
+				);
+				const finalScoreText = this.add.text(
+					GameConfig.width / 2,
+					GameConfig.height / 2 + 50,
+					`Final Score: ${this._scoreText.currentScore}`,
+					{ fontSize: "32px" },
+				);
 				gameOverText.setOrigin(0.5, 0.5);
 				finalScoreText.setOrigin(0.5, 0.5);
 
@@ -656,37 +701,69 @@ class Tetris extends Phaser.Scene {
 				this._currentPiece.destroy(true, true);
 
 				let timeToDestroy = 1000;
-				BoardGrid.Rows.slice().reverse().forEach((row) => {
-					setTimeout(() => {
-						this._staticPieces.clearRow(row);
-					}, timeToDestroy);
-					timeToDestroy += 250;
-				});
+				BoardGrid.Rows.slice()
+					.reverse()
+					.forEach((row) => {
+						setTimeout(() => {
+							this._staticPieces.clearRow(row);
+						}, timeToDestroy);
+						timeToDestroy += 250;
+					});
 			}
 		});
 	}
 	/**
-	 * @param {Phaser.Input.Keyboard.Key} key 
+	 * @param {Phaser.Input.Keyboard.Key} key
 	 */
-	keyDown(key) { }
+	keyDown(key) {
+		const keyCodes = Phaser.Input.Keyboard.KeyCodes;
+
+		if (key.keyCode === keyCodes.ESC) {
+			this._isPaused = !this._isPaused;
+
+			if (this._isPaused) {
+				this._pausedText = this.add.text(
+					GameConfig.width / 2,
+					GameConfig.height / 2,
+					"Paused",
+					{
+						fontSize: "64px",
+					},
+				);
+				this._pausedText.setOrigin(0.5, 0.5);
+
+				clearInterval(this._physicsInterval);
+			}
+		}
+	}
 
 	spawnTetromino() {
-		const shapeType = ShapeTypes[Math.floor(Math.random() * (ShapeTypes.length - 1))];
+		const shapeType =
+			ShapeTypes[Math.floor(Math.random() * (ShapeTypes.length - 1))];
 		const shapeToSpawn = Shapes[shapeType];
 		const colour = Math.floor(Math.random() * NumSpritesheetColours);
 		let xOffset = 0;
 
 		for (let i = 5; i >= 0; i--) {
-			const xOffsetTmp = BoardGrid.Columns[Math.floor(Math.random() * BoardGrid.Columns.length)];
-			const coordinates = shapeToSpawn.coordinates[0].map((coordinates) => {
-				return new Vector2(coordinates[0], coordinates[1]);
-			});
+			const xOffsetTmp =
+				BoardGrid.Columns[
+					Math.floor(Math.random() * BoardGrid.Columns.length)
+				];
+			const coordinates = shapeToSpawn.coordinates[0].map(
+				(coordinates) => {
+					return new Vector2(coordinates[0], coordinates[1]);
+				},
+			);
 
-			if (!this.checkMapBounds(shapeToSpawn, new Vector2(xOffsetTmp, 0))) {
+			if (
+				!this.checkMapBounds(shapeToSpawn, new Vector2(xOffsetTmp, 0))
+			) {
 				continue;
 			}
 
-			if (!this.checkPieceBounds(coordinates, new Vector2(xOffsetTmp, 0))) {
+			if (
+				!this.checkPieceBounds(coordinates, new Vector2(xOffsetTmp, 0))
+			) {
 				continue;
 			}
 
@@ -732,7 +809,10 @@ class Tetris extends Phaser.Scene {
 	 * @returns {boolean}
 	 */
 	checkMapBounds(shape, offset) {
-		if (shape.gridSize * 40 + offset.x > 480 || shape.gridSize * 40 + offset.y > 880) {
+		if (
+			shape.gridSize * 40 + offset.x > 480 ||
+			shape.gridSize * 40 + offset.y > 880
+		) {
 			return false;
 		}
 
@@ -759,16 +839,17 @@ class Tetris extends Phaser.Scene {
 		return isOkay;
 	}
 
-
 	/**
 	 * @param {number} speed
 	 */
 	updateTickSpeed(speed) {
 		clearInterval(this._physicsInterval);
 
-		this._physicsInterval = setInterval(() => this.physicsStep(this), speed);
+		this._physicsInterval = setInterval(
+			() => this.physicsStep(this),
+			speed,
+		);
 	}
-
 
 	//* Class Variables
 	_pieceMatrix = new PieceMatrix(BoardGrid.Columns, BoardGrid.Rows);
@@ -820,6 +901,18 @@ class Tetris extends Phaser.Scene {
 	 * @type {boolean}
 	 */
 	_isGameOver = false;
+
+	/**
+	 * @private
+	 * @type {Phaser.GameObjects.Text}
+	 */
+	_pausedText;
+
+	/**
+	 * @private
+	 * @type {boolean}
+	 */
+	_isPaused = false;
 }
 
 const GameConfig = {
@@ -830,4 +923,3 @@ const GameConfig = {
 	scene: Tetris,
 };
 const Game = new Phaser.Game(GameConfig);
-

@@ -809,7 +809,6 @@ class Tetris extends Phaser.Scene {
 			case keyCodes.DOWN:
 				this._isSpedUp = false;
 				this.updateTickSpeed(GameTickSpeed);
-				this.physicsStep(this);
 		}
 	}
 

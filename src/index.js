@@ -854,7 +854,6 @@ class Tetris extends Phaser.Scene {
 	 */
 	rotatePiece(key) {
 		const keyCodes = Phaser.Input.Keyboard.KeyCodes;
-		let canRotate = true;
 		let newRotation = this._currentPiece.currentRotation;
 
 		if (key.keyCode === keyCodes.UP) {
@@ -863,11 +862,11 @@ class Tetris extends Phaser.Scene {
 			} else {
 				newRotation += 90;
 			}
-		} else if (key.keyCode === keyCodes.DOWN) {
+		} else if (key.keyCode === keyCodes.Z) {
 			if (newRotation <= 0) {
 				newRotation = 270;
 			} else {
-				newRotation -= 80;
+				newRotation -= 90;
 			}
 		}
 
@@ -876,6 +875,7 @@ class Tetris extends Phaser.Scene {
 
 	/**
 	 * @param {Vector2} position
+	 * @returns {boolean}
 	 */
 	checkBounds(position) {
 		const mapBounds = new Vector2(

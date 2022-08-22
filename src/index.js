@@ -611,12 +611,7 @@ class Tetris extends Phaser.Scene {
 
 				const nextPos = new Vector2(child.x, child.y + 40);
 
-				if (this.checkBounds(nextPos)) {
-					stopPiece = true;
-					return;
-				}
-
-				if (this._pieceMatrix.getCell(nextPos)) {
+				if (!this.checkBounds(nextPos)) {
 					stopPiece = true;
 					return;
 				}
@@ -751,13 +746,46 @@ class Tetris extends Phaser.Scene {
 				break;
 
 			case keyCodes.LEFT:
+				let canMoveLeft = true;
 				this._currentPiece.getChildren().forEach(
 					/**
 					 * @param {Cell} piece
 					 */
 					//@ts-ignore
-					(piece) => {},
+					(piece) => {
+						const nextPos = new Vector2(piece.x - 40, piece.y);
+
+						if (!this.checkBounds(nextPos)) {
+							canMoveLeft = false;
+						}
+					},
 				);
+
+				if (canMoveLeft) {
+					this._currentPiece.incX(-40);
+				}
+				break;
+
+			case keyCodes.RIGHT:
+				let canMoveRight = true;
+				this._currentPiece.getChildren().forEach(
+					/**
+					 * @param {Cell} piece
+					 */
+					//@ts-ignore
+					(piece) => {
+						const nextPos = new Vector2(piece.x + 40, piece.y);
+
+						if (!this.checkBounds(nextPos)) {
+							canMoveRight = false;
+						}
+					},
+				);
+
+				if (canMoveRight) {
+					this._currentPiece.incX(40);
+				}
+				break;
 		}
 	}
 
@@ -776,7 +804,8 @@ class Tetris extends Phaser.Scene {
 
 			let isOk = true;
 
-			shapeToSpawn.coordinates[0].forEach((position) => {
+			shapeToSpawn.coordinates[0].forEach((coords) => {
+				const position = new Vector2(coords[0], coords[1]);
 				if (!this.checkBounds(position)) {
 					isOk = false;
 				}
@@ -831,11 +860,11 @@ class Tetris extends Phaser.Scene {
 			GameConfig.height - 40,
 		);
 
-		if (position.x > mapBounds.x || position.x < mapBounds.x) {
+		if (position.x > mapBounds.x || position.x < 0) {
 			return false;
 		}
 
-		if (position.y > mapBounds.y || position.y < mapBounds.y) {
+		if (position.y > mapBounds.y || position.y < 0) {
 			return false;
 		}
 

@@ -577,6 +577,11 @@ class Tetris extends Phaser.Scene {
 			this.keyDown,
 			this,
 		);
+		this._keyupEvent = this.input.keyboard.on(
+			"keyup",
+			this.keyUp,
+			this
+		);
 		this._scoreText = new ScoreText(this, new Vector2(10, 10), {
 			fontSize: "24px",
 		});
@@ -741,7 +746,7 @@ class Tetris extends Phaser.Scene {
 
 		switch (key.keyCode) {
 			case keyCodes.UP:
-			case keyCodes.DOWN:
+			case keyCodes.Z:
 				this.rotatePiece(key);
 				break;
 
@@ -786,6 +791,25 @@ class Tetris extends Phaser.Scene {
 					this._currentPiece.incX(40);
 				}
 				break;
+
+			case keyCodes.DOWN:
+				this._isSpedUp = true;
+				this.updateTickSpeed(GameTickSpeed / 2);
+				this.physicsStep(this);
+		}
+	}
+
+	/**
+	 * @param {Phaser.Input.Keyboard.Key} key
+	 */
+	keyUp(key) {
+		const keyCodes = Phaser.Input.Keyboard.KeyCodes;
+
+		switch (key.keyCode) {
+			case keyCodes.DOWN:
+				this._isSpedUp = false;
+				this.updateTickSpeed(GameTickSpeed);
+				this.physicsStep(this);
 		}
 	}
 
@@ -949,6 +973,18 @@ class Tetris extends Phaser.Scene {
 	 * @type {boolean}
 	 */
 	_isPaused = false;
+
+	/**
+	 * @private
+	 * @type {boolean}
+	 */
+	_isSpedUp = false;
+
+	/**
+	 * @private
+	 * @type {Phaser.Input.Keyboard.KeyboardPlugin}
+	 */
+	_keyupEvent;
 }
 
 const GameConfig = {

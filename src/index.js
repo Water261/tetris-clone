@@ -611,7 +611,7 @@ class Tetris extends Phaser.Scene {
 
 				const nextPos = new Vector2(child.x, child.y + 40);
 
-				if (nextPos.y > GameConfig.height - 40) {
+				if (this.checkBounds(nextPos)) {
 					stopPiece = true;
 					return;
 				}
@@ -733,7 +733,31 @@ class Tetris extends Phaser.Scene {
 				this._pausedText.setOrigin(0.5, 0.5);
 
 				clearInterval(this._physicsInterval);
+			} else {
+				this._pausedText.destroy();
+
+				this.updateTickSpeed(GameTickSpeed);
 			}
+		}
+
+		if (this._isPaused) {
+			return;
+		}
+
+		switch (key.keyCode) {
+			case keyCodes.UP:
+			case keyCodes.DOWN:
+				this.rotatePiece(key);
+				break;
+
+			case keyCodes.LEFT:
+				this._currentPiece.getChildren().forEach(
+					/**
+					 * @param {Cell} piece
+					 */
+					//@ts-ignore
+					(piece) => {},
+				);
 		}
 	}
 
@@ -749,21 +773,16 @@ class Tetris extends Phaser.Scene {
 				BoardGrid.Columns[
 					Math.floor(Math.random() * BoardGrid.Columns.length)
 				];
-			const coordinates = shapeToSpawn.coordinates[0].map(
-				(coordinates) => {
-					return new Vector2(coordinates[0], coordinates[1]);
-				},
-			);
 
-			if (
-				!this.checkMapBounds(shapeToSpawn, new Vector2(xOffsetTmp, 0))
-			) {
-				continue;
-			}
+			let isOk = true;
 
-			if (
-				!this.checkPieceBounds(coordinates, new Vector2(xOffsetTmp, 0))
-			) {
+			shapeToSpawn.coordinates[0].forEach((position) => {
+				if (!this.checkBounds(position)) {
+					isOk = false;
+				}
+			});
+
+			if (!isOk) {
 				continue;
 			}
 
@@ -804,39 +823,27 @@ class Tetris extends Phaser.Scene {
 	}
 
 	/**
-	 * @param {{ coordinates: { 0: number[][]; 90: number[][]; 180: number[][]; 270: number[][]; }; gridSize: number; }} shape
-	 * @param {Vector2} offset
-	 * @returns {boolean}
+	 * @param {Vector2} position
 	 */
-	checkMapBounds(shape, offset) {
-		if (
-			shape.gridSize * 40 + offset.x > 480 ||
-			shape.gridSize * 40 + offset.y > 880
-		) {
+	checkBounds(position) {
+		const mapBounds = new Vector2(
+			GameConfig.width - 40,
+			GameConfig.height - 40,
+		);
+
+		if (position.x > mapBounds.x || position.x < mapBounds.x) {
+			return false;
+		}
+
+		if (position.y > mapBounds.y || position.y < mapBounds.y) {
+			return false;
+		}
+
+		if (this._pieceMatrix.getCell(position)) {
 			return false;
 		}
 
 		return true;
-	}
-
-	/**
-	 * @param {Vector2[]} positions
-	 * @param {Vector2} offset
-	 * @returns {boolean}
-	 */
-	checkPieceBounds(positions, offset) {
-		let isOkay = true;
-
-		positions.forEach((position) => {
-			const xPos = offset.x + position.x;
-			const yPos = offset.y + position.y;
-
-			if (this._pieceMatrix.getCell(new Vector2(xPos, yPos))) {
-				isOkay = false;
-			}
-		});
-
-		return isOkay;
 	}
 
 	/**

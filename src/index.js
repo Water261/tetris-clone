@@ -489,7 +489,13 @@ class PieceMatrix {
 	 * @returns {boolean}
 	 */
 	getCell(position) {
-		return this._pieceMatrix[position.x][position.y];
+		const row = this._pieceMatrix[position.x];
+
+		if (row !== undefined) {
+			return row[position.y];
+		} else {
+			return false;
+		}
 	}
 
 	/**

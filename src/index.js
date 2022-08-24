@@ -620,16 +620,13 @@ class Tetris extends Phaser.Scene {
 		);
 
 		if (stopPiece) {
-
-			this._currentPiece
-				.getChildren()
-				.forEach((piece) =>
-					this._pieceMatrix.setCell(
-						// @ts-ignore
-						new Vector2(piece.x, piece.y),
-						true,
-					),
-				);
+			this._currentPiece.getChildren().forEach((piece) =>
+				this._pieceMatrix.setCell(
+					// @ts-ignore
+					new Vector2(piece.x, piece.y),
+					true,
+				),
+			);
 
 			this._staticPieces.addMultiple(this._currentPiece.getChildren());
 			this._currentPiece.destroy(false, false);
@@ -639,37 +636,65 @@ class Tetris extends Phaser.Scene {
 			this._currentPiece.incY(40);
 		}
 
-		BoardGrid.Rows.forEach((row) => {
-			let destroyRow = true;
+		BoardGrid.Rows.slice()
+			.reverse()
+			.forEach((row) => {
+				let destroyRow = true;
 
-			BoardGrid.Columns.forEach((column) => {
-				const pos = new Vector2(column, row);
-
-				if (!this._pieceMatrix.getCell(pos)) {
-					destroyRow = false;
-				}
-			});
-
-			if (destroyRow) {
 				BoardGrid.Columns.forEach((column) => {
 					const pos = new Vector2(column, row);
-					this._pieceMatrix.setCell(pos, false);
+
+					if (!this._pieceMatrix.getCell(pos)) {
+						destroyRow = false;
+					}
 				});
 
-				const piecesToDestroy = this._staticPieces.getChildren().filter(
-					/**
-					 * @param {Cell} p
-					 */
-					// @ts-ignore
-					(p) => p.y === row,
-				);
-				piecesToDestroy.forEach((p) => p.destroy());
+				if (destroyRow) {
+					BoardGrid.Columns.forEach((column) => {
+						const pos = new Vector2(column, row);
+						this._pieceMatrix.setCell(pos, false);
+					});
 
-				this._staticPieces.incY(40);
+					const piecesToDestroy = this._staticPieces
+						.getChildren()
+						.filter(
+							/**
+							 * @param {Cell} p
+							 */
+							// @ts-ignore
+							(p) => p.y === row,
+						);
+					piecesToDestroy.forEach((p) => p.destroy());
 
-				this._scoreText.currentScore += 100;
-			}
-		});
+					this._staticPieces.getChildren().forEach(
+						/**
+						 * @param {Cell} piece
+						 */
+						//@ts-ignore
+						(piece) => {
+							this._pieceMatrix.setCell(
+								new Vector2(piece.x, piece.y),
+								false,
+							);
+						},
+					);
+					this._staticPieces.incY(40);
+					this._staticPieces.getChildren().forEach(
+						/**
+						 * @param {Cell} piece
+						 */
+						//@ts-ignore
+						(piece) => {
+							this._pieceMatrix.setCell(
+								new Vector2(piece.x, piece.y),
+								true,
+							);
+						},
+					);
+
+					this._scoreText.currentScore += 100;
+				}
+			});
 
 		BoardGrid.Columns.forEach((column) => {
 			const pos = new Vector2(column, 0);

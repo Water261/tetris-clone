@@ -577,11 +577,7 @@ class Tetris extends Phaser.Scene {
 			this.keyDown,
 			this,
 		);
-		this._keyupEvent = this.input.keyboard.on(
-			"keyup",
-			this.keyUp,
-			this
-		);
+		this._keyupEvent = this.input.keyboard.on("keyup", this.keyUp, this);
 		this._scoreText = new ScoreText(this, new Vector2(10, 10), {
 			fontSize: "24px",
 		});
@@ -606,17 +602,17 @@ class Tetris extends Phaser.Scene {
 
 		this._currentPiece.getChildren().forEach(
 			/**
-			 * @param {Cell} child
+			 * @param {Cell} piece
 			 */
 			// @ts-ignore
-			(child) => {
+			(piece) => {
 				if (stopPiece) {
 					return;
 				}
 
-				const nextPos = new Vector2(child.x, child.y + 40);
+				const nextPos = new Vector2(piece.x, piece.y + 40);
 
-				if (!this.checkBounds(nextPos)) {
+				if (!this.checkPosition(nextPos)) {
 					stopPiece = true;
 					return;
 				}
@@ -631,10 +627,11 @@ class Tetris extends Phaser.Scene {
 				// @ts-ignore
 				(piece) => {
 					const pos = new Vector2(piece.x, piece.y);
+
 					this._pieceMatrix.setCell(pos, true);
 
-					this._staticPieces.add(piece);
-					this._currentPiece.remove(piece);
+					this._staticPieces.add(piece, false);
+					this._currentPiece.remove(piece, false, false);
 				},
 			);
 
@@ -760,7 +757,7 @@ class Tetris extends Phaser.Scene {
 					(piece) => {
 						const nextPos = new Vector2(piece.x - 40, piece.y);
 
-						if (!this.checkBounds(nextPos)) {
+						if (!this.checkPosition(nextPos)) {
 							canMoveLeft = false;
 						}
 					},
@@ -781,7 +778,7 @@ class Tetris extends Phaser.Scene {
 					(piece) => {
 						const nextPos = new Vector2(piece.x + 40, piece.y);
 
-						if (!this.checkBounds(nextPos)) {
+						if (!this.checkPosition(nextPos)) {
 							canMoveRight = false;
 						}
 					},
@@ -828,8 +825,8 @@ class Tetris extends Phaser.Scene {
 			let isOk = true;
 
 			shapeToSpawn.coordinates[0].forEach((coords) => {
-				const position = new Vector2(coords[0], coords[1]);
-				if (!this.checkBounds(position)) {
+				const position = new Vector2(coords[0] + xOffsetTmp, coords[1]);
+				if (!this.checkPosition(position)) {
 					isOk = false;
 				}
 			});
@@ -877,7 +874,7 @@ class Tetris extends Phaser.Scene {
 	 * @param {Vector2} position
 	 * @returns {boolean}
 	 */
-	checkBounds(position) {
+	checkPosition(position) {
 		const mapBounds = new Vector2(
 			GameConfig.width - 40,
 			GameConfig.height - 40,

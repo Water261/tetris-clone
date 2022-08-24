@@ -620,8 +620,16 @@ class Tetris extends Phaser.Scene {
 		);
 
 		if (stopPiece) {
-			// @ts-ignore
-			this._currentPiece.getChildren().forEach((piece) => this._pieceMatrix.setCell(new Vector2(piece.x, piece.y), true));
+
+			this._currentPiece
+				.getChildren()
+				.forEach((piece) =>
+					this._pieceMatrix.setCell(
+						// @ts-ignore
+						new Vector2(piece.x, piece.y),
+						true,
+					),
+				);
 
 			this._staticPieces.addMultiple(this._currentPiece.getChildren());
 			this._currentPiece.destroy(false, false);

@@ -293,7 +293,7 @@ class StaticPieces extends Phaser.GameObjects.Group {
 	/**
 	 * @param {number} row
 	 */
-	clearRow(row) {
+	destroyRow(row) {
 		const piecesToRemove = this.getChildren().filter(
 			/**
 			 * @param {Cell} p
@@ -506,6 +506,52 @@ class PieceMatrix {
 		this._pieceMatrix[position.x][position.y] = newValue;
 	}
 
+	/**
+	 * @param {number} row
+	 */
+	getRow(row) {
+		return BoardGrid.Columns.map((col) => {
+			return this._pieceMatrix[col][row];
+		});
+	}
+
+	/**
+	 * @param {number} row
+	 * @param {boolean} newValue
+	 */
+	setRow(row, newValue) {
+		BoardGrid.Columns.forEach((col) => {
+			this._pieceMatrix[col][row] = newValue;
+		});
+	}
+
+	/**
+	 * Shift the entire piece matrix down by
+	 * @param {number} shiftBy
+	 */
+	shiftDown(shiftBy) {
+		let newMatrix = [];
+		
+		BoardGrid.Columns.forEach((col) => {
+			newMatrix[col] = [];
+
+			BoardGrid.Rows.forEach((row) => newMatrix[col][row] = false);
+		});
+
+		this._pieceMatrix.forEach((column, columnIndex) => {
+			column.forEach((piece, pieceIndex) => {
+				if (pieceIndex + 40 >= GameConfig.height) {
+					this.setRow(pieceIndex, false);
+					return;
+				}
+
+				newMatrix[columnIndex][pieceIndex + 40] = piece;
+			});
+		});
+
+		this._pieceMatrix = newMatrix;
+	}
+
 	//* Class Variables
 	/**
 	 * @type {number}
@@ -645,58 +691,20 @@ class Tetris extends Phaser.Scene {
 		BoardGrid.Rows.slice()
 			.reverse()
 			.forEach((row) => {
-				let destroyRow = true;
+				const matrixRow = this._pieceMatrix.getRow(row);
+				let shouldDestroyRow = true;
 
-				BoardGrid.Columns.forEach((column) => {
-					const pos = new Vector2(column, row);
-
-					if (!this._pieceMatrix.getCell(pos)) {
-						destroyRow = false;
+				matrixRow.forEach((isOccupied) => {
+					if (!isOccupied) {
+						shouldDestroyRow = false;
 					}
 				});
 
-				if (destroyRow) {
-					BoardGrid.Columns.forEach((column) => {
-						const pos = new Vector2(column, row);
-						this._pieceMatrix.setCell(pos, false);
-					});
+				if (shouldDestroyRow) {
+					this._pieceMatrix.shiftDown(40);
 
-					const piecesToDestroy = this._staticPieces
-						.getChildren()
-						.filter(
-							/**
-							 * @param {Cell} p
-							 */
-							// @ts-ignore
-							(p) => p.y === row,
-						);
-					piecesToDestroy.forEach((p) => p.destroy());
-
-					this._staticPieces.getChildren().forEach(
-						/**
-						 * @param {Cell} piece
-						 */
-						//@ts-ignore
-						(piece) => {
-							this._pieceMatrix.setCell(
-								new Vector2(piece.x, piece.y),
-								false,
-							);
-						},
-					);
+					this._staticPieces.destroyRow(row);
 					this._staticPieces.incY(40);
-					this._staticPieces.getChildren().forEach(
-						/**
-						 * @param {Cell} piece
-						 */
-						//@ts-ignore
-						(piece) => {
-							this._pieceMatrix.setCell(
-								new Vector2(piece.x, piece.y),
-								true,
-							);
-						},
-					);
 
 					this._scoreText.currentScore += 100;
 				}
@@ -732,7 +740,7 @@ class Tetris extends Phaser.Scene {
 					.reverse()
 					.forEach((row) => {
 						setTimeout(() => {
-							this._staticPieces.clearRow(row);
+							this._staticPieces.destroyRow(row);
 						}, timeToDestroy);
 						timeToDestroy += 250;
 					});

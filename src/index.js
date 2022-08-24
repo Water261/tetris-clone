@@ -697,15 +697,15 @@ class Tetris extends Phaser.Scene {
 
 				this._currentPiece.destroy(true, true);
 
-				let timeToDestroy = 1000;
-				BoardGrid.Rows.slice()
-					.reverse()
-					.forEach((row) => {
-						setTimeout(() => {
-							this._staticPieces.clearRow(row);
-						}, timeToDestroy);
-						timeToDestroy += 250;
-					});
+				// let timeToDestroy = 1000;
+				// BoardGrid.Rows.slice()
+				// 	.reverse()
+				// 	.forEach((row) => {
+				// 		setTimeout(() => {
+				// 			this._staticPieces.clearRow(row);
+				// 		}, timeToDestroy);
+				// 		timeToDestroy += 250;
+				// 	});
 			}
 		});
 	}

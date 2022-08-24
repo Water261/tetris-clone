@@ -620,20 +620,11 @@ class Tetris extends Phaser.Scene {
 		);
 
 		if (stopPiece) {
-			this._currentPiece.getChildren().forEach(
-				/**
-				 * @param {Cell} piece
-				 */
-				// @ts-ignore
-				(piece) => {
-					const pos = new Vector2(piece.x, piece.y);
+			// @ts-ignore
+			this._currentPiece.getChildren().forEach((piece) => this._pieceMatrix.setCell(new Vector2(piece.x, piece.y), true));
 
-					this._pieceMatrix.setCell(pos, true);
-
-					this._staticPieces.add(piece, false);
-					this._currentPiece.remove(piece, false, false);
-				},
-			);
+			this._staticPieces.addMultiple(this._currentPiece.getChildren());
+			this._currentPiece.destroy(false, false);
 
 			this.spawnTetromino();
 		} else {
@@ -697,15 +688,15 @@ class Tetris extends Phaser.Scene {
 
 				this._currentPiece.destroy(true, true);
 
-				// let timeToDestroy = 1000;
-				// BoardGrid.Rows.slice()
-				// 	.reverse()
-				// 	.forEach((row) => {
-				// 		setTimeout(() => {
-				// 			this._staticPieces.clearRow(row);
-				// 		}, timeToDestroy);
-				// 		timeToDestroy += 250;
-				// 	});
+				let timeToDestroy = 1000;
+				BoardGrid.Rows.slice()
+					.reverse()
+					.forEach((row) => {
+						setTimeout(() => {
+							this._staticPieces.clearRow(row);
+						}, timeToDestroy);
+						timeToDestroy += 250;
+					});
 			}
 		});
 	}

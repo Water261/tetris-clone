@@ -531,11 +531,11 @@ class PieceMatrix {
 	 */
 	shiftDown(shiftBy) {
 		let newMatrix = [];
-		
+
 		BoardGrid.Columns.forEach((col) => {
 			newMatrix[col] = [];
 
-			BoardGrid.Rows.forEach((row) => newMatrix[col][row] = false);
+			BoardGrid.Rows.forEach((row) => (newMatrix[col][row] = false));
 		});
 
 		this._pieceMatrix.forEach((column, columnIndex) => {

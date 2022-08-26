@@ -688,6 +688,7 @@ class Tetris extends Phaser.Scene {
 			fontSize: "24px",
 		});
 		this._staticPieces = new StaticPieces(this);
+		this._currentTickSpeed = GameTickSpeed;
 
 		this.spawnTetromino();
 
@@ -766,7 +767,7 @@ class Tetris extends Phaser.Scene {
 					this._scoreText.currentScore += 100;
 
 					if (this._currentTickSpeed > GameTickSpeed / 2) {
-						this._currentTickSpeed -= 0.025;
+						this._currentTickSpeed -= 10;
 						this.updateTickSpeed(this._currentTickSpeed);
 					}
 				}
@@ -905,7 +906,7 @@ class Tetris extends Phaser.Scene {
 		switch (key.keyCode) {
 			case keyCodes.DOWN:
 				this._isSpedUp = false;
-				this.updateTickSpeed(GameTickSpeed);
+				this.updateTickSpeed(this._currentTickSpeed);
 		}
 	}
 
@@ -1086,7 +1087,7 @@ class Tetris extends Phaser.Scene {
 	 * @private
 	 * @type {number}
 	 */
-	_currentTickSpeed = GameTickSpeed;
+	_currentTickSpeed;
 }
 
 const GameConfig = {

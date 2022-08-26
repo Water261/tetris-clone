@@ -304,6 +304,34 @@ class StaticPieces extends Phaser.GameObjects.Group {
 
 		piecesToRemove.forEach((p) => p.destroy());
 	}
+
+	/**
+	 * @param {number} shiftBy
+	 * @param {number} stopAtRow
+	 */
+	shiftDown(shiftBy, stopAtRow) {
+		this.getChildren().forEach(
+			/**
+			 * @param {Cell} piece
+			 */
+			//@ts-ignore
+			(piece) => {
+				if (piece.y < stopAtRow) {
+					piece.y += shiftBy;
+				}
+			},
+		);
+	}
+
+	getPositions() {
+		return this.getChildren().map(
+			/**
+			 * @param {Cell} piece
+			 */
+			//@ts-ignore
+			(piece) => new Vector2(piece.x, piece.y),
+		);
+	}
 }
 
 class Piece extends Phaser.GameObjects.Group {
@@ -530,10 +558,11 @@ class PieceMatrix {
 	}
 
 	/**
-	 * Shift the entire piece matrix down by
+	 * Shift the entire piece matrix down by x amount
 	 * @param {number} shiftBy
+	 * @param {number} stopAtRow
 	 */
-	shiftDown(shiftBy) {
+	shiftDown(shiftBy, stopAtRow) {
 		let newMatrix = [];
 
 		BoardGrid.Columns.forEach((col) => {
@@ -544,14 +573,35 @@ class PieceMatrix {
 
 		this._pieceMatrix.forEach((column, columnIndex) => {
 			column.forEach((piece, pieceIndex) => {
-				if (pieceIndex + 40 >= GameConfig.height) {
+				if (pieceIndex + shiftBy >= GameConfig.height) {
 					this.setRow(pieceIndex, false);
 					return;
 				}
 
-				newMatrix[columnIndex][pieceIndex + 40] = piece;
+				if (pieceIndex >= stopAtRow) {
+					return;
+				}
+
+				newMatrix[columnIndex][pieceIndex + shiftBy] = piece;
 			});
 		});
+
+		this._pieceMatrix = newMatrix;
+	}
+
+	/**
+	 * @param {Vector2[]} positions
+	 */
+	recreateMatrix(positions) {
+		let newMatrix = [];
+
+		BoardGrid.Columns.forEach((col) => {
+			newMatrix[col] = [];
+
+			BoardGrid.Rows.forEach((row) => (newMatrix[col][row] = false));
+		});
+
+		positions.forEach((pos) => (newMatrix[pos.x][pos.y] = true));
 
 		this._pieceMatrix = newMatrix;
 	}
@@ -654,6 +704,9 @@ class Tetris extends Phaser.Scene {
 			return;
 		}
 
+		const positions = this._staticPieces.getPositions();
+		this._pieceMatrix.recreateMatrix(positions);
+
 		let stopPiece = false;
 
 		this._currentPiece.getChildren().forEach(
@@ -705,17 +758,17 @@ class Tetris extends Phaser.Scene {
 				});
 
 				if (shouldDestroyRow) {
-					this._pieceMatrix.shiftDown(40);
+					this._pieceMatrix.shiftDown(40, row);
 
 					this._staticPieces.destroyRow(row);
-					this._staticPieces.incY(40);
+					this._staticPieces.shiftDown(40, row);
 
 					this._scoreText.currentScore += 100;
 
 					if (this._currentTickSpeed > GameTickSpeed / 2) {
 						this._currentTickSpeed -= 0.025;
 						this.updateTickSpeed(this._currentTickSpeed);
-					}					
+					}
 				}
 			});
 
